@@ -41,9 +41,12 @@ srv.urls["/"] = srv.urls["/index.html"] = srv.staticFileHandler("./index.html", 
             var name = cookie.parse(req.headers["cookie"])["name"];
             var channelId = regChannel.exec(url.parse(req.url).pathname)[1];
             renderRoom(channelId, name, function(data) {
-                res.sendHeader(200, { "Conent-Length": data.length,
-                                      "Content-Type": "text/html",
-                                      "Set-Cookie": "name=" + name  + "; path=/;" });
+                var cookies = { "Conent-Length": data.length,
+                                "Content-Type": "text/html" }
+            
+                if(name) { cookies["Set-Cookie"] = "name=" + name  + "; path=/;"; }
+            
+                res.sendHeader(200, cookies);
                 res.end(data, "utf8");
             });
         }
