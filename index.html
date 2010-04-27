@@ -1,12 +1,16 @@
-<lift:surround bind="default" at="content">
-<head><title>Create a new chat room</title></head>
+<html>
+<head>
+    <title>Create a new chat room</title>
+</head>
+<body>
     <div>
         What chatroom would you like to enter?: <input id="chat-room-name" type="text" />
     </div>
-<script> //<![CDATA[
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript"></script>
+<script>
     $("#chat-room-name").keydown(function(e) { 
-        if(e.which == 13) { window.location = "/chat/" + encodeURIComponent($(this).val()); } 
+        if(e.which == 13) { window.location = encodeURIComponent($(this).val()); } 
     });
-//]]>
 </script>
-</lift:surround>
+</body>
+</html>
