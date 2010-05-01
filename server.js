@@ -53,5 +53,17 @@ srv.urls["/"] = srv.urls["/index.html"] = srv.staticFileHandler("./index.html", 
     });
 })()
 
+setInterval(function RoomReaper() { // Closes rooms with no visitors after around 60 seconds
+    for(var i in chn.channels) {
+        var channel = chn.channels[i], userCount = channel.users().length;
+        channel.idle = channel.idle || 0;
+        
+        if(userCount === 0) { channel.idle += 1; } else { channel.idle = 0; }
+        
+        if(channel.idle > 2) { channel.destroy(); sys.puts("Destroyed Room: " + i); }
+        else { sys.puts("Room Alive: " + i + "; user count: " + userCount); }
+    }
+}, 30000);
+
 srv.server.listen(8002);
 chn.start(srv);
