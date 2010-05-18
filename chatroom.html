@@ -98,6 +98,8 @@ $(function() {
         }
     });
     
+    $(".chat-text").each(function() { this.scrollTop = $(this).height(); });
+    
     var ch = new Channel("(:room-name:)", (:initial-info-id:));
     ch.onReceive(function(msg) { addLine(msg.content.name, msg.content.text); });
     $(window).load(function() { setTimeout(function() { ch.start(); }, 0); });
