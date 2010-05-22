@@ -47,13 +47,13 @@
         width: 100%;
         height: 20px;
         font-size: 15px;
-}
+     }
 </style>
 </head>
 <body>
     <div class="chat">
         <div class="chat-text">
-            (:chat-text ~ <div class="line">[:name :]: [:text:]</div> :)
+            (:chat-text ~ <div class="line">[:name:]: [:text:]</div> :)
         </div>
         <div class="reply">
             (:reply ~
@@ -68,18 +68,42 @@
 $(function() {
     var name = "(:user-name:)";
 
+    var api = (function() { // postMessage pseudo-api
+        if(!window.postMessage || !window.parent.postMessage) { return $.noop; }
+        
+        function send(msg) {
+            window.parent.postMessage(JSON.stringify(msg), "*");
+        }
+        
+        function recieve(e) {
+            var msg = JSON.parse(e.data);
+            
+            if("add-line" in msg) {
+                addLine(msg["add-line"].name, msg["add-line"].line);
+                return;
+            }
+        }
+        
+        window.addEventListener("message", recieve, false)
+        if(name) { send({ name: name }); }
+        
+        return { send: send };
+    })();
+    
     function addLine(name, line) {
         $("<div class='line' />")
             .text(name + ": " + line)
             .appendTo("div.chat-text");
         $("div.chat-text").scrollTop($("div.chat-text").height());
+        
+        ch.send({ name: name, text: line });
+        api.send({ "add-line": { name: name, line: line } });
     }
         
     $(".sendLine").live("keydown", function(e) {
         var line = $(this).val();
         
-        if(e.which == 13 && line) { 
-            ch.send({ name: name, text: line });
+        if(e.which == 13 && line) {
             addLine(name, line);
             $(this).val(""); 
         } 
@@ -95,6 +119,8 @@ $(function() {
             $("<input class='sendLine' type='text' />")
                 .replaceAll(".reply div.enterName")
                 .focus();
+            
+            api.send({ name: name });
         }
     });
     

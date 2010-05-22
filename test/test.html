@@ -1,0 +1,18 @@
+<html>
+<head>
+</head>
+<body>
+    <iframe id="test" src="http://192.168.1.2:8002/test">
+    </iframe>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js" type="text/javascript"></script>
+<script>
+$(window).load(function() {
+    window.addEventListener("message", function(e) { 
+        console.log(e.data);
+    }, false)
+    
+    $("#test")[0].contentWindow.postMessage(JSON.stringify({ "add-line": { name: "xavi", line: "hello" } }), "*");
+});  
+</script>
+</body>
+</html>
