@@ -79,7 +79,8 @@ $(function() {
             var msg = JSON.parse(e.data);
             
             if("add-line" in msg) {
-                addLine(msg["add-line"].name, msg["add-line"].line);
+                addLine(msg["add-line"].name, msg["add-line"].text);
+                ch.send(msg["add-line"]);
                 return;
             }
         }
@@ -90,22 +91,23 @@ $(function() {
         return { send: send };
     })();
     
-    function addLine(name, line) {
+    function addLine(name, text) {
         $("<div class='line' />")
-            .text(name + ": " + line)
-            .appendTo("div.chat-text");
-        $("div.chat-text").scrollTop($("div.chat-text").height());
+            .text(name + ": " + text)
+            .appendTo(".chat-text");
+        $(".chat-text").each(function() { this.scrollTop = this.scrollHeight; });
         
-        ch.send({ name: name, text: line });
-        api.send({ "add-line": { name: name, line: line } });
+        api.send({ "add-line": { name: name, text: text } });
     }
         
     $(".sendLine").live("keydown", function(e) {
-        var line = $(this).val();
+        var text = $(this).val();
         
-        if(e.which == 13 && line) {
-            addLine(name, line);
+        if(e.which == 13 && text) {
+            addLine(name, text);
             $(this).val(""); 
+            
+            ch.send({ name: name, text: text });
         } 
     })
     .focus();
@@ -124,7 +126,7 @@ $(function() {
         }
     });
     
-    $(".chat-text").each(function() { this.scrollTop = $(this).height(); });
+    $(".chat-text").each(function() { this.scrollTop = this.scrollHeight; });
     
     var ch = new Channel("(:room-name:)", (:initial-info-id:));
     ch.onReceive(function(msg) { addLine(msg.content.name, msg.content.text); });

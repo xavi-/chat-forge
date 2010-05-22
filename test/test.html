@@ -11,7 +11,7 @@ $(window).load(function() {
         console.log(e.data);
     }, false)
     
-    $("#test")[0].contentWindow.postMessage(JSON.stringify({ "add-line": { name: "xavi", line: "hello" } }), "*");
+    $("#test")[0].contentWindow.postMessage(JSON.stringify({ "add-line": { name: "xavi", text: "hello" } }), "*");
 });  
 </script>
 </body>
