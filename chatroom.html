@@ -69,7 +69,9 @@ $(function() {
     var name = "(:user-name:)";
 
     var api = (function() { // postMessage pseudo-api
-        if(!window.postMessage || !window.parent.postMessage) { return $.noop; }
+        if(window.parent === window) { return { send: $.noop }; }
+        
+        if(!window.postMessage || !window.parent.postMessage) { return { send: $.noop }; }
         
         function send(msg) {
             window.parent.postMessage(JSON.stringify(msg), "*");
