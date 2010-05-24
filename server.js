@@ -46,7 +46,7 @@ srv.urls["/"] = srv.urls["/index.html"] = srv.staticFileHandler("./index.html", 
             
                 if(name) { cookies["Set-Cookie"] = "name=" + name  + "; path=/;"; }
             
-                res.sendHeader(200, cookies);
+                res.writeHead(200, cookies);
                 res.end(data, "utf8");
             });
         }
