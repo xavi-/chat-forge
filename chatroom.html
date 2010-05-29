@@ -18,6 +18,12 @@
         font-size: 16px; 
         font-family: sans-serif;
     }
+    
+    .line.admin {
+        font-style: italic;
+        color: gray;
+        text-align: center;
+    }
 
     .chat-text {
         height: 100%;
@@ -53,7 +59,9 @@
 <body>
     <div class="chat">
         <div class="chat-text">
-            (:chat-text ~ <div class="line">[:name:]: [:text:]</div> :)
+            (:chat-text ~ 
+                [:line ~ <div class="line">{:name:}: {:text:}</div>:] 
+                [:admin ~ <div class="line admin">{:text:}</div>:] :)
         </div>
         <div class="reply">
             (:reply ~
@@ -80,9 +88,9 @@ $(function() {
         function recieve(e) {
             var msg = JSON.parse(e.data);
             
-            if("add-line" in msg) {
-                addLine(msg["add-line"].name, msg["add-line"].text);
-                ch.send(msg["add-line"]);
+            if("line" in msg) {
+                addLine(msg["line"].name, msg["line"].text);
+                ch.send(msg["line"]);
                 return;
             }
         }
@@ -101,6 +109,13 @@ $(function() {
         
         api.send({ "add-line": { name: name, text: text } });
     }
+    
+    function addAdminLine(text) {
+        $("<div class='line admin' />")
+    	    .text(text)
+    	    .appendTo(".chat-text");
+        $(".chat-text").each(function() { this.scrollTop = this.scrollHeight; });
+    }
         
     $(".sendLine").live("keydown", function(e) {
         var text = $(this).val();
@@ -109,11 +124,11 @@ $(function() {
             addLine(name, text);
             $(this).val(""); 
             
-            ch.send({ name: name, text: text });
-        } 
+            ch.send({ line: { name: name, text: text } });
+        }
     })
     .focus();
-    
+        
     $(".enterName").click(function() { 
         name = window.prompt("Enter your name");
         
@@ -124,6 +139,7 @@ $(function() {
                 .replaceAll(".reply div.enterName")
                 .focus();
             
+            ch.send({ name: name });
             api.send({ name: name });
         }
     });
@@ -131,7 +147,11 @@ $(function() {
     $(".chat-text").each(function() { this.scrollTop = this.scrollHeight; });
     
     var ch = new Channel("(:room-name:)", (:initial-info-id:));
-    ch.onReceive(function(msg) { addLine(msg.content.name, msg.content.text); });
+    ch.onReceive(function(msg) {
+        if("admin" in msg.content) { addAdminLine(msg.content["admin"].text); return; }
+	
+        addLine(msg.content["line"].name, msg.content["line"].text); 
+    });
     $(window).load(function() { setTimeout(function() { ch.start(); }, 0); });
 });
 </script>

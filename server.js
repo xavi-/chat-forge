@@ -13,10 +13,11 @@ function renderRoom(channelId, name, callback) {
         var channel = chn.channels[channelId] || chn.create(channelId);
         var context = { "room-name": channelId, "initial-info-id": channel.lastInfoId };
         context["user-name"] = name;
-        context["chat-text"] = channel.data.map(function(o) { return o.message.content; });
+        context["chat-text"] = channel.data.map(function(o) { return { admin: o.message.content.admin || null,
+                                                                       line: o.message.content.line || null }; });
         context["reply"] = { "send-line": function(def) { return (name ? def : ""); }, 
                              "enter-name": function(def) { return (name ? "" : def); } };
-        
+
         bind.to(data, context, callback);
     });
 }
@@ -38,20 +39,40 @@ srv.urls["/"] = srv.urls["/index.html"] = srv.staticFileHandler("./index.html", 
     srv.patterns.push({
         test: function(req) { return regChannel.test(url.parse(req.url).pathname); },
         handler: function(req, res) {
-            var name = cookie.parse(req.headers["cookie"])["name"];
+            var cookies = cookie.parse(req.headers["cookie"]);
+            var name = cookies["name"];
+            var userId = cookies["user-id"];
             var channelId = regChannel.exec(url.parse(req.url).pathname)[1];
             renderRoom(channelId, name, function(data) {
                 var cookies = { "Conent-Length": data.length,
                                 "Content-Type": "text/html" }
             
-                if(name) { cookies["Set-Cookie"] = "name=" + name  + "; path=/;"; }
+                if(name) { names[userId] = name; cookies["Set-Cookie"] = "name=" + name  + "; path=/;"; }
             
                 res.writeHead(200, cookies);
                 res.end(data, "utf8");
             });
         }
     });
-})()
+})();
+
+var names = {};
+chn.onCreate(function(id, channel) {
+    channel.onReceive(function(msg) {
+        if("name" in msg.content) {
+            names[msg.userId] = msg.content["name"];
+            channel.onUserChange.trigger({ userId: msg.userId, event: "join" });
+            msg.content = null; return;
+        }
+    });
+    
+    channel.onUserChange(function(e) {
+        if(!names[e.userId]) { return; }
+        
+        var msg = { admin: { text: names[e.userId] + (e.event === "join" ? " just joined" : " just left") } };
+		channel.send(0, msg);
+    });
+});
 
 setInterval(function RoomReaper() { // Closes rooms with no visitors after around 60 seconds
     for(var i in chn.channels) {
@@ -60,8 +81,7 @@ setInterval(function RoomReaper() { // Closes rooms with no visitors after aroun
         
         if(userCount === 0) { channel.idle += 1; } else { channel.idle = 0; }
         
-        if(channel.idle > 2) { channel.destroy(); sys.puts("Destroyed Room: " + i); }
-        else { sys.puts("Room Alive: " + i + "; user count: " + userCount); }
+        if(channel.idle > 2) { channel.destroy(); }
     }
 }, 30000);
 
