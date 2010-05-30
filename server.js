@@ -64,6 +64,13 @@ chn.onCreate(function(id, channel) {
             channel.onUserChange.trigger({ userId: msg.userId, event: "join" });
             msg.content = null; return;
         }
+        
+        if("line" in msg.content && msg.content["line"].name && msg.content["line"].text) { return; }
+        
+        if("admin" in msg.content && msg.content["admin"].text) { return; }
+        
+        //Bad message sent
+        msg.content = null;
     });
     
     channel.onUserChange(function(e) {
